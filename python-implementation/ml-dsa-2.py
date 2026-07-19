@@ -5,19 +5,18 @@ import random
 
 from collections.abc import Callable
 
-def create_matrix(
-    rows: int,
-    cols: int,
-    generator: Callable[[], int]
-):
-    return [
-        [generator() for _ in range(cols)]
-        for _ in range(rows)
-    ]
+
+def create_matrix(rows: int, cols: int, generator: Callable[[], int]):
+    return [[generator() for _ in range(cols)] for _ in range(rows)]
+
 
 # We use this function to fill the items in matrix
 # TODO: What is Q?
-def random_integer(Q = 17) -> int:
+
+Q = 17
+
+
+def random_integer(Q=17) -> int:
     return random.randrange(Q)
 
 
@@ -34,10 +33,8 @@ People are often surprised because they expect something like 1000×1000.
 
 
 def generate_secret_vector(size: int) -> list[int]:
-    return [
-        random.choice([-1, 0, 1])
-        for _ in range(size)
-    ]
+    # TODO: Use better bound/eta here
+    return [random.choice([-1, 0, 1]) for _ in range(size)]
 
 
 def matrix_vector_multiply(matrix: list[list[int]], vector: list[int]) -> list[int]:
@@ -56,17 +53,20 @@ def matrix_vector_multiply(matrix: list[list[int]], vector: list[int]) -> list[i
 
     return result
 
+
+def vector_add(a: list[int], b: list[int]) -> list[int]:
+    return [(x + y) % Q for x, y in zip(a, b)]
+
+
 # A is Public matrix used by everyone during key generation,
 # signing, and verification.
 ROWS = 4
 COLUMNS = 4
 A = create_matrix(ROWS, COLUMNS, random_integer)
-s = generate_secret_vector(COLUMNS)
+s1 = generate_secret_vector(COLUMNS)
+s2 = generate_secret_vector(ROWS)
 
-t = matrix_vector_multiply(A, s)
+t = vector_add(matrix_vector_multiply(A, s1), s2)
 
 public_key = (A, t)
-private_key = s
-
-
-
+private_key = (s1, s2)
