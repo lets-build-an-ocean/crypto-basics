@@ -70,3 +70,24 @@ t = vector_add(matrix_vector_multiply(A, s1), s2)
 
 public_key = (A, t)
 private_key = (s1, s2)
+
+
+def hash_to_challenge(message: str, w: list[int]) -> int:
+    import hashlib
+
+    # Kept tiny (1..3) on purpose: it forces c*s2 to stay SMALL, which is the
+    # whole point of the next version. Real ML-DSA uses a huge challenge space
+    # via low-weight polynomials; a 3-value space here is NOT secure.
+    data = message.encode() + b"|" + ",".join(map(str, w)).encode()
+    return 1 + hashlib.sha256(data).digest()[0] % 3
+
+
+def sign(message: str, private_key, A):
+    s1, s2 = private_key
+    y = [random_integer() for _ in range(COLUMNS)]  # masking vector
+    w = matrix_vector_multiply(A, y)  # commitment  w = A·y
+    c = hash_to_challenge(message, w)  # challenge
+    z = vector_add(y, scalar_vector_multiply(c, s1))  # response    z = y + c·s1
+    # w is returned ONLY so we can visualise the gap. It is NOT part of a real
+    # signature — the verifier rebuilds its own copy from public data.
+    return (z, c), w
