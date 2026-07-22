@@ -3,6 +3,8 @@
 import hashlib
 import random
 
+from collections.abc import Callable
+
 
 # n is the modulus — same role Q plays in ML-DSA. Every number lives mod n
 # so values stay bounded, but here n is a secret-sized product of two huge
@@ -36,9 +38,13 @@ def is_prime(n, k=10):
     return True
 
 
-def generate_prime(bits=KEY_BITS):
+def random_candidate(bits: int = KEY_BITS) -> int:
+    return random.getrandbits(bits) | 1
+
+
+def generate_prime(generator: Callable[[], int]) -> int:
     while True:
-        n = random.getrandbits(bits) | 1
+        n = generator()
         if is_prime(n):
             return n
 
@@ -50,8 +56,8 @@ def generate_prime(bits=KEY_BITS):
 # and can't derive d from E either.
 def key_generation() -> dict:
     # Pick two large random primes p, q
-    p = generate_prime()
-    q = generate_prime()
+    p = generate_prime(random_candidate)
+    q = generate_prime(random_candidate)
 
     n = p * q
 
